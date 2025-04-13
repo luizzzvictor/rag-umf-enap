@@ -6,7 +6,6 @@ Uma aplicação baseada em Retrieval Augmented Generation (RAG) para consulta a 
 
 - Acesso direto aos Relatórios Finais da UMF/CNJ pré-carregados
 - Interface de chat para fazer perguntas sobre o conteúdo dos documentos
-- Manutenção do contexto da conversa para perguntas de acompanhamento
 - Citação das fontes nas respostas
 - Persistência de dados usando ChromaDB
 
