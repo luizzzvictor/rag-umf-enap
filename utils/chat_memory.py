@@ -33,6 +33,9 @@ class StreamlitChatHistory(BaseChatMessageHistory):
     @property
     def messages(self) -> List[BaseMessage]:
         """Retorna a lista de mensagens."""
+        # Verifica se a chave existe e inicializa se necessário
+        if self.key not in self.session_state:
+            self.session_state[self.key] = []
         return self.session_state[self.key]
 
     def add_message(self, message: BaseMessage) -> None:
@@ -42,6 +45,9 @@ class StreamlitChatHistory(BaseChatMessageHistory):
         Args:
             message: A mensagem a ser adicionada.
         """
+        # Verifica se a chave existe e inicializa se necessário
+        if self.key not in self.session_state:
+            self.session_state[self.key] = []
         self.session_state[self.key].append(message)
 
     def add_user_message(self, message: str) -> None:
@@ -79,8 +85,17 @@ def get_conversation_memory(
     Returns:
         Uma instância de ConversationBufferMemory.
     """
-    memory = ConversationBufferMemory(
-        chat_memory=chat_history, return_messages=True, memory_key="chat_history"
-    )
-
-    return memory
+    # Inicializa uma nova memória de conversa
+    try:
+        memory = ConversationBufferMemory(
+            chat_memory=chat_history, return_messages=True, memory_key="chat_history"
+        )
+        return memory
+    except Exception as e:
+        # Em caso de erro, cria uma nova memória com chat_memory vazio
+        print(f"Erro ao criar memória de conversa: {e}")
+        chat_history.clear()  # Limpa o histórico para começar novamente
+        memory = ConversationBufferMemory(
+            chat_memory=chat_history, return_messages=True, memory_key="chat_history"
+        )
+        return memory

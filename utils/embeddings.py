@@ -32,7 +32,7 @@ def create_vector_store(
     persist_directory: Optional[str] = None,
 ) -> Chroma:
     """
-    Cria uma base de dados vetorial a partir dos documentos.
+    Cria uma nova base de vetores a partir dos documentos processados.
 
     Args:
         documents: Lista de documentos a serem indexados.
@@ -42,21 +42,48 @@ def create_vector_store(
     Returns:
         Instância do Chroma DB.
     """
-    # Se um diretório de persistência for fornecido, verifique se existe
-    if persist_directory and not os.path.exists(persist_directory):
-        os.makedirs(persist_directory)
+    try:
+        # Configurações atualizadas conforme a migração do ChromaDB
+        import chromadb
 
-    # Cria um banco Chroma com os documentos
-    vectordb = Chroma.from_documents(
-        documents=documents, embedding=embeddings, persist_directory=persist_directory
-    )
+        # Criar cliente com a nova configuração
+        if persist_directory:
+            client = chromadb.PersistentClient(path=persist_directory)
+        else:
+            client = chromadb.Client()
 
-    # Persiste os vetores se um diretório for fornecido
-    if persist_directory:
-        vectordb.persist()
-        print(f"Base de vetores persistida em {persist_directory}")
+        # Cria a base de vetores com o novo cliente
+        vector_store = Chroma.from_documents(
+            documents=documents,
+            embedding=embeddings,
+            persist_directory=persist_directory,
+            client=client,
+        )
 
-    return vectordb
+        # Persiste a base se um diretório for fornecido
+        if persist_directory:
+            if hasattr(vector_store, "persist"):
+                vector_store.persist()
+                print(f"Base de vetores persistida em {persist_directory}")
+
+        return vector_store
+    except Exception as e:
+        print(f"Erro ao criar base de vetores: {str(e)}")
+        # Se houve erro e temos um diretório de persistência, tenta recriá-lo
+        if persist_directory and os.path.exists(persist_directory):
+            try:
+                import shutil
+
+                shutil.rmtree(persist_directory)
+                os.makedirs(persist_directory, exist_ok=True)
+                print(
+                    f"Diretório de persistência {persist_directory} recriado após erro"
+                )
+            except Exception as cleanup_error:
+                print(f"Erro ao limpar diretório: {str(cleanup_error)}")
+
+        # Relança o erro para ser tratado pelo chamador
+        raise
 
 
 def load_vector_store(persist_directory: str, embeddings: OpenAIEmbeddings) -> Chroma:
@@ -70,9 +97,20 @@ def load_vector_store(persist_directory: str, embeddings: OpenAIEmbeddings) -> C
     Returns:
         Instância do Chroma DB.
     """
-    if not os.path.exists(persist_directory):
-        raise FileNotFoundError(f"O diretório {persist_directory} não existe.")
+    try:
+        # Configurações atualizadas conforme a migração do ChromaDB
+        import chromadb
 
-    print(f"Carregando base de vetores de {persist_directory}")
+        # Criar cliente com a nova configuração
+        client = chromadb.PersistentClient(path=persist_directory)
 
-    return Chroma(persist_directory=persist_directory, embedding_function=embeddings)
+        print(f"Carregando base de vetores de {persist_directory}")
+        return Chroma(
+            persist_directory=persist_directory,
+            embedding_function=embeddings,
+            client=client,
+        )
+    except Exception as e:
+        print(f"Erro ao carregar base de vetores: {str(e)}")
+        # Relança o erro para ser tratado pelo chamador
+        raise
