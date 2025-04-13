@@ -4,8 +4,13 @@ Aplicação RAG para consulta de documentos da UMF/CNJ
 
 import os
 import shutil
+import sys
 import tempfile
 from typing import Dict, List
+
+# Configuração do SQLite para o ChromaDB
+__import__("pysqlite3")
+sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 import streamlit as st
 from dotenv import load_dotenv
