@@ -28,11 +28,8 @@ venv/
 ENV/
 
 # Dados e vectorstore
-data/vectordb/
-data/pdfs/
-*.db
-*.sqlite
-*.sqlite3
+# data/vectordb/
+# data/pdfs/
 
 # Arquivos de log
 *.log
